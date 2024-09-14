@@ -1,0 +1,28 @@
+DELIMITER ;;
+
+CREATE PROCEDURE dw.changeAdhocGroupbyOption()
+BEGIN
+  DECLARE t1_ID INT;
+  DECLARE t1_vals VARCHAR(300);
+   DECLARE t1_Name VARCHAR(300);
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE cursor_i CURSOR FOR 
+  SELECT DimensionsDefinitionID  ,RelatedDimensionsDefinitionIDs ,DimensionName FROM dw.DimensionsDefinition2 t1;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+  OPEN cursor_i;
+  read_loop: LOOP
+    FETCH cursor_i INTO t1_ID, t1_IdsList,t1_Name;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+    update mis.AdhocReportGroupByOptions   t2
+		set t2.DimensionsDefinitionID=t1_ID
+		 , t2.AliasName= t1_Name
+		where t2.DimensionsDefinitionID in (t1_IdsList); 
+  END LOOP;
+  CLOSE cursor_i;
+END;
+;;
+
+
+CALL `dw`.`changeAdhocGroupbyOption`();
